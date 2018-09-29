@@ -1,0 +1,174 @@
+$sidebar-width: 74px;
+$body-background: #20212b;
+$primary-text: rgba(255, 255, 255, 0.9);
+$secondary-text: rgba(255, 255, 255, 0.6);
+$border: rgba(255, 255, 255, 0.1);
+$content-wrapper-background: trasnparent;
+$content-background: rgba(0, 0, 0, 0.16);
+$sidebar-icon: rgba(255, 255, 255, 0.4);
+$sidebar-icon-active: $primary-text;
+
+* {
+  font-family: 'Montserrat', sans-serif;
+}
+body {
+  background-color: $body-background;
+  padding: 0px;
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: #666;
+    border-radius: 20px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 20px;
+  }
+}
+
+.container {
+  display: flex;
+  justify-content: center;
+}
+
+.rows {
+  max-width: 600px;
+  flex: 1;
+  overflow-y: auto;
+  margin: 0;
+  padding: 0;
+  .row {
+    border-bottom: 1px $border solid;
+    display: flex;
+    flex-direction: column;
+    margin: 0px 2px;
+    padding: 16px;
+    .user-container {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      margin-bottom: 16px;
+      .avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 6px;
+      }
+      .username-container {
+        flex: 1;
+        cursor: pointer;
+        .username {
+          font-size: 16px;
+          font-weight: 600;
+          color: $primary-text;
+          margin-left: 16px;
+          display: flex;
+          align-items: center;
+          .badge {
+            border-radius: 4px;
+            font-size: 12px;
+            margin-left: 12px;
+            padding: 8px;
+            height: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.2);
+          }
+        }
+      }
+      .date {
+        font-size: 11px;
+        color: $secondary-text;
+      }
+    }
+    .text-votes-container {
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      align-items: flex-start;
+      margin-bottom: 16px;
+      .text {
+        color: $primary-text;
+        font-size: 14px;
+        letter-spacing: 0.2px;
+        flex: 1;
+      }
+      .votes-container {
+        margin-left: 4px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        color: $primary-text;
+        .icon {
+          font-size: 26px;
+          margin: -4px 0px;
+        }
+        .vote {
+          font-size: 14px;
+        }
+      }
+    }
+    .image {
+      width: 100%;
+      border-radius: 6px;
+      margin-top: 8px;
+      margin-bottom: 16px;
+    }
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      .tag {
+        height: 26px;
+        padding: 4px 8px;
+        margin-right: 8px;
+        margin-bottom: 8px;
+        background-color: lighten(rgba(0, 0, 0, 0.2), 60);
+        color: $secondary-text;
+        font-size: 15px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border-radius: 4px;
+      }
+    }
+  }
+}
+
+button {
+  border: none;
+  margin: 0;
+  padding: 0;
+  width: auto;
+  overflow: visible;
+
+  background: transparent;
+  color: white;
+  cursor: pointer;
+}
+
+.loading-more-container {
+  height: 80px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  img {
+    width: 100%;
+    height: 100%;
+  }
+}
+
+.load-more-btn {
+  width: 100%;
+  height: 80px;
+  font-size: 20px;
+  margin: 8px 0px;
+  border-radius: 6px;
+  &:active,
+  &:focus,
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    border: none;
+  }
+}
