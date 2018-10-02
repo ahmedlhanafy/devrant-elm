@@ -10,14 +10,7 @@ import Msg exposing (..)
 
 getRants : Int -> Cmd Msg
 getRants pageIndex =
-    let
-        limit =
-            20
-
-        url =
-            "https://www.devrant.io/api/devrant/rants?app=3&sort=algo&limit=" ++ (fromInt limit) ++ "&skip=" ++ (fromInt (pageIndex * limit))
-    in
-        send SetRants (Http.get url decodeRants)
+    send SetRants (Http.get "https://www.devrant.io/api/devrant/rants?app=3&sort=algo" decodeRants)
 
 
 decodeRants : Decoder (List Rant)
