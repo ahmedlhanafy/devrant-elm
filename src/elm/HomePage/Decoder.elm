@@ -1,23 +1,8 @@
-module API exposing (getRants)
+module HomePage.Decoder exposing (decodeRants)
 
-import String exposing (fromInt)
-import Http exposing (send, Error)
 import Json.Decode as Decode exposing (int, string, float, Decoder, at, list, field, bool)
 import Json.Decode.Pipeline exposing (required, optional, hardcoded)
 import Types exposing (..)
-import Msg exposing (..)
-
-
-getRants : Int -> Cmd Msg
-getRants pageIndex =
-    let
-        limit =
-            20
-
-        url =
-            "https://www.devrant.io/api/devrant/rants?app=3&sort=algo&limit=" ++ (fromInt limit) ++ "&skip=" ++ (fromInt (pageIndex * limit))
-    in
-        send SetRants (Http.get url decodeRants)
 
 
 decodeRants : Decoder (List Rant)

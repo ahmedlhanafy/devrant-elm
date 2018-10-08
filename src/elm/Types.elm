@@ -1,5 +1,11 @@
 module Types exposing (..)
 
+import Time exposing (Posix, millisToPosix)
+
+
+type alias GlobalState =
+    { currentTime : Posix }
+
 
 type alias Response =
     { rants : List Rant, success : Bool }
