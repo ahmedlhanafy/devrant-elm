@@ -1,59 +1,33 @@
 module Main exposing (..)
 
 import Browser
-import Browser.Navigation exposing (Key, replaceUrl, load)
-import Url exposing (Url)
-import Url.Parser exposing (Parser, (</>), int, map, oneOf, s, string, top)
-import Html
+import Browser.Navigation exposing (Key, pushUrl, load)
 import Css exposing (..)
+import Html
 import Html.Styled exposing (..)
-import Html.Styled.Attributes exposing (css, class, src)
-import Http exposing (Error)
-import Types exposing (..)
+import Html.Styled.Attributes exposing (css, class, src, href)
+import Html.Styled.Events exposing (onClick)
+import Url.Builder as UrlBuilder
+import Url exposing (Url)
 import Task
-import HomePage.Main as HomePage
-import RantPage.Main as RantPage
-import Views.Theme exposing (theme)
 import Time exposing (Posix, millisToPosix)
+import Http exposing (Error)
+import HomePage
+import RantPage
+import Views.Theme exposing (theme)
+import Views.Common exposing (button)
+import Router exposing (..)
 
 
 ---- MODEL ----
 
 
-type Route
-    = HomeRoute
-    | RantRoute Int
-    | NotFoundRoute
-
-
-toRoute : Url -> Route
-toRoute url =
-    Maybe.withDefault NotFoundRoute (Url.Parser.parse routeParser url)
-
-
-routeParser : Parser (Route -> a) a
-routeParser =
-    oneOf
-        [ Url.Parser.map HomeRoute Url.Parser.top
-        , Url.Parser.map RantRoute (Url.Parser.s "rant" </> Url.Parser.int)
-        ]
-
-
-type RouterModel
-    = Home HomePage.Model
-    | Rant RantPage.Model
-    | NotFound
-
-
 type alias Model =
-    { routerModel : RouterModel, key : Key, url : Url, currentTime : Posix }
-
-
-updateWith : (subModel -> RouterModel) -> (subMsg -> Msg) -> ( subModel, Cmd subMsg ) -> ( RouterModel, Cmd Msg )
-updateWith toModel toMsg ( subModel, subCmd ) =
-    ( toModel subModel
-    , Cmd.map toMsg subCmd
-    )
+    { routerModel : RouterModel
+    , key : Key
+    , url : Url
+    , currentTime : Posix
+    }
 
 
 init : flags -> Url -> Key -> ( Model, Cmd Msg )
@@ -62,24 +36,27 @@ init flags url key =
         route =
             toRoute url
 
-        ( routerModel, cmd ) =
+        inititalModel =
+            { url = url
+            , key = key
+            , currentTime = Time.millisToPosix 0
+            , routerModel = NotFound
+            }
+
+        ( model, cmd ) =
             case route of
                 HomeRoute ->
-                    updateWith Home HomePageMsg HomePage.init
+                    HomePage.init
+                        |> updateWith Home HomePageMsg inititalModel
 
                 RantRoute id ->
-                    updateWith Rant RantPageMsg (RantPage.init id)
+                    RantPage.init id
+                        |> updateWith Rant RantPageMsg inititalModel
 
                 NotFoundRoute ->
-                    ( NotFound, Cmd.none )
+                    ( inititalModel, Cmd.none )
     in
-        ( { routerModel = routerModel
-          , url = url
-          , key = key
-          , currentTime = Time.millisToPosix 0
-          }
-        , Cmd.batch [ Task.perform SetTime Time.now, cmd ]
-        )
+        ( model, Cmd.batch [ Task.perform SetTime Time.now, cmd ] )
 
 
 
@@ -95,11 +72,6 @@ type Msg
     | SetTime Posix
 
 
-toModelz : Model -> (subModel -> RouterModel) -> ( subModel, Cmd a ) -> ( Model, Cmd a )
-toModelz model toModelzz ( routerModelz, cmd ) =
-    ( { model | routerModel = (toModelzz routerModelz) }, cmd )
-
-
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     let
@@ -113,39 +85,22 @@ update msg model =
             ( SetTime newTime, _ ) ->
                 ( { model | currentTime = newTime }, Cmd.none )
 
-            ( HomePageMsg homeMsg, Home homeModel ) ->
-                let
-                    ( finalModel, cmd ) =
-                        toModelz model Home (HomePage.update homeMsg homeModel)
-                in
-                    ( finalModel
-                    , Cmd.map HomePageMsg cmd
-                    )
-
-            ( RantPageMsg rantMsg, Rant rantModel ) ->
-                let
-                    ( finalModel, cmd ) =
-                        toModelz model Rant (RantPage.update rantMsg rantModel)
-                in
-                    ( finalModel
-                    , Cmd.map RantPageMsg cmd
-                    )
-
-            -- ( RantPageMsg rantMsg, Rant rantModel ) ->
-            --     RantPage.update rantMsg rantModel
-            --         |> updateWith Rant RantPageMsg
             ( LinkClicked urlRequest, _ ) ->
                 case urlRequest of
                     Browser.Internal url ->
-                        ( model, replaceUrl model.key (Url.toString url) )
+                        ( model, pushUrl model.key (Url.toString url) )
 
                     Browser.External href ->
                         ( model, load href )
 
             ( UrlChanged url, _ ) ->
-                ( { model | url = url }
-                , Cmd.none
-                )
+                changeRoute url model
+
+            ( HomePageMsg homeMsg, Home homeModel ) ->
+                updateWith Home HomePageMsg model (HomePage.update homeMsg homeModel)
+
+            ( RantPageMsg rantMsg, Rant rantModel ) ->
+                updateWith Rant RantPageMsg model (RantPage.update rantMsg rantModel)
 
             ( _, _ ) ->
                 -- Disregard messages that arrived for the wrong page.
@@ -154,6 +109,76 @@ update msg model =
 
 
 -- VIEW ----
+
+
+view : Model -> Document Msg
+view model =
+    let
+        mapView msg viewFunc =
+            Html.Styled.map msg viewFunc
+
+        body =
+            [ div
+                [ css
+                    [ displayFlex
+                    , justifyContent center
+                    , backgroundColor theme.bodyBackground
+                    , height (vh 100)
+                    , overflowY hidden
+                    ]
+                ]
+                [ div
+                    [ css
+                        [ flex (int 1)
+                        , overflowY auto
+                        , padding2 (px 0) (px 400)
+                        ]
+                    ]
+                    [ case model.routerModel of
+                        Home homeModel ->
+                            mapView HomePageMsg (HomePage.view homeModel model.currentTime)
+
+                        Rant rantModel ->
+                            mapView RantPageMsg (RantPage.view rantModel model.currentTime)
+
+                        NotFound ->
+                            Views.Common.a
+                                [ UrlBuilder.relative [ "/" ] [] |> href ]
+                                [ text "Go back to the feed" ]
+                    ]
+                ]
+            ]
+    in
+        { title = "Feed", body = body }
+
+
+
+---- SUBSCRIPTIONS
+
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    Time.every 60000 Tick
+
+
+
+-- PROGRAM
+
+
+main : Program () Model Msg
+main =
+    Browser.application
+        { view = view >> toUnstyledDocument
+        , init = init
+        , update = update
+        , subscriptions = subscriptions
+        , onUrlRequest = LinkClicked
+        , onUrlChange = UrlChanged
+        }
+
+
+
+-- UTILS
 
 
 type alias Document msg =
@@ -169,56 +194,28 @@ toUnstyledDocument doc =
     }
 
 
-view : Model -> Document Msg
-view model =
+updateWith : (subModel -> RouterModel) -> (subMsg -> Msg) -> Model -> ( subModel, Cmd subMsg ) -> ( Model, Cmd Msg )
+updateWith toModel toMsg model ( subModel, subCmd ) =
+    ( { model | routerModel = (toModel subModel) }
+    , Cmd.map toMsg subCmd
+    )
+
+
+changeRoute : Url -> Model -> ( Model, Cmd Msg )
+changeRoute url model =
     let
-        mapView msg viewFunc =
-            Html.Styled.map
-                msg
-                viewFunc
+        route =
+            toRoute url
 
-        routerModel =
-            model.routerModel
-
-        body =
-            [ div
-                [ css
-                    [ displayFlex
-                    , justifyContent center
-                    , backgroundColor theme.bodyBackground
-                    ]
-                ]
-                [ case routerModel of
-                    Home homeModel ->
-                        mapView HomePageMsg (HomePage.view homeModel model.currentTime)
-
-                    Rant rantModel ->
-                        mapView RantPageMsg (RantPage.view rantModel model.currentTime)
-
-                    NotFound ->
-                        span [] [ text "Not Found" ]
-                ]
-            ]
+        newModel =
+            { model | url = url }
     in
-        { title = "Hey", body = body }
+        case route of
+            HomeRoute ->
+                updateWith Home HomePageMsg newModel HomePage.init
 
+            RantRoute id ->
+                updateWith Rant RantPageMsg newModel (RantPage.init id)
 
-
----- SUBSCRIPTIONS ----
-
-
-subscriptions : Model -> Sub Msg
-subscriptions model =
-    Time.every 60000 Tick
-
-
-main : Program () Model Msg
-main =
-    Browser.application
-        { view = view >> toUnstyledDocument
-        , init = init
-        , update = update
-        , subscriptions = subscriptions
-        , onUrlRequest = LinkClicked
-        , onUrlChange = UrlChanged
-        }
+            NotFoundRoute ->
+                ( model, Cmd.none )

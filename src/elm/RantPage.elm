@@ -1,4 +1,4 @@
-module RantPage.Main exposing (Model, Msg, init, update, view)
+module RantPage exposing (Model, Msg, init, update, view)
 
 import Css exposing (..)
 import Decoder exposing (rantResponseDecoder)
@@ -7,26 +7,10 @@ import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (css, class, src)
 import Html.Styled.Events exposing (onClick)
 import Http exposing (send, Error)
-import Types exposing (Rant, GlobalState, RantResponse)
+import Types exposing (Rant, Comment, RantResponse)
 import Url.Builder as Url
 import Views.RantView exposing (rantView)
 import Time exposing (Posix)
-
-
-getRant : Int -> Cmd Msg
-getRant id =
-    let
-        url =
-            Url.crossOrigin "https://www.devrant.io/"
-                [ "api"
-                , "devrant"
-                , "rants"
-                , String.fromInt id
-                ]
-                [ Url.int "app" 3 ]
-    in
-        Http.send SetRant (Http.get url rantResponseDecoder)
-
 
 
 -- MODEL
@@ -34,6 +18,7 @@ getRant id =
 
 type alias Model =
     { rant : Maybe Rant
+    , comments : List Comment
     , loading : Bool
     }
 
@@ -41,7 +26,8 @@ type alias Model =
 init : Int -> ( Model, Cmd Msg )
 init id =
     ( { rant = Nothing
-      , loading = False
+      , comments = []
+      , loading = True
       }
     , getRant id
     )
@@ -63,7 +49,7 @@ update msg model =
             ( { model | loading = True }, getRant id )
 
         SetRant (Ok rantResponse) ->
-            ( { model | rant = Just rantResponse.rant }, Cmd.none )
+            ( { model | rant = Just rantResponse.rant, comments = rantResponse.comments }, Cmd.none )
 
         SetRant (Err _) ->
             ( model, Cmd.none )
@@ -77,7 +63,26 @@ view : Model -> Posix -> Html Msg
 view model currentTime =
     case model.rant of
         Just rant ->
-            rantView currentTime rant
+            rantView currentTime model.comments rant
 
         Nothing ->
-            div [] []
+            img [ src "/loading.svg" ] []
+
+
+
+-- API
+
+
+getRant : Int -> Cmd Msg
+getRant id =
+    let
+        url =
+            Url.crossOrigin "https://www.devrant.io/"
+                [ "api"
+                , "devrant"
+                , "rants"
+                , String.fromInt id
+                ]
+                [ Url.int "app" 3 ]
+    in
+        Http.send SetRant (Http.get url rantResponseDecoder)

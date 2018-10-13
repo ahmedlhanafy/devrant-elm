@@ -2,16 +2,16 @@ module Views.Common exposing (..)
 
 import Html
 import Css exposing (..)
-import Html.Styled exposing (..)
+import Html.Styled as Styled
 import Html.Styled.Attributes exposing (css, class, src)
 import Html.Styled.Events exposing (onClick)
 import Types exposing (..)
 import Views.Theme exposing (theme)
 
 
-tagView : String -> Html msg
+tagView : String -> Styled.Html msg
 tagView tagText =
-    span
+    Styled.span
         [ css
             [ height (px 26)
             , padding2 (px 4) (px 8)
@@ -26,12 +26,12 @@ tagView tagText =
             , borderRadius (px 4)
             ]
         ]
-        [ text tagText ]
+        [ Styled.text tagText ]
 
 
-avatarView : Maybe UserAvatar -> Html msg
+avatarView : Maybe UserAvatar -> Styled.Html msg
 avatarView image =
-    img
+    Styled.img
         [ css
             [ width (px 36)
             , height (px 36)
@@ -49,14 +49,40 @@ avatarView image =
         []
 
 
-btn : List (Attribute msg) -> List (Html msg) -> Html msg
-btn =
-    styled button
-        [ border (px 0)
-        , margin (px 0)
-        , padding (px 0)
-        , overflow visible
-        , backgroundColor transparent
-        , color (rgb 255 255 255)
-        , cursor pointer
-        ]
+btnStyles =
+    [ width (pct 100)
+    , height (px 80)
+    , fontSize (px 20)
+    , margin2 (px 8) (px 0)
+    , borderRadius (px 6)
+    , border (px 0)
+    , margin (px 0)
+    , padding (px 0)
+    , overflow visible
+    , backgroundColor transparent
+    , color (rgb 255 255 255)
+    , cursor pointer
+    , displayFlex
+    , justifyContent center
+    , alignItems center
+    , textDecoration none
+    , [ hover, focus, active ]
+        |> List.map
+            (\func ->
+                func
+                    [ backgroundColor (rgba 255 255 255 0.2)
+                    , border (px 0)
+                    ]
+            )
+        |> Css.batch
+    ]
+
+
+button : List (Styled.Attribute msg) -> List (Styled.Html msg) -> Styled.Html msg
+button =
+    Styled.styled Styled.button btnStyles
+
+
+a : List (Styled.Attribute msg) -> List (Styled.Html msg) -> Styled.Html msg
+a =
+    Styled.styled Styled.a btnStyles

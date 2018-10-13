@@ -2,9 +2,7 @@
     "type": "application",
     "source-directories": [
         "src/elm",
-        "src/elm/Views",
-        "src/elm/HomePage",
-        "src/elm/RantPage"
+        "src/elm/Views"
     ],
     "elm-version": "0.19.0",
     "dependencies": {

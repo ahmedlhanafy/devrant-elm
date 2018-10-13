@@ -1,4 +1,4 @@
-module HomePage.Main exposing (Model, view, init, Msg, update)
+module HomePage exposing (Model, view, init, Msg, update)
 
 import Css exposing (..)
 import Decoder exposing (rantsResponseDecoder)
@@ -9,36 +9,10 @@ import Html.Styled.Events exposing (onClick)
 import Http exposing (send, Error)
 import String exposing (fromInt)
 import Time exposing (Posix, millisToPosix)
-import Types exposing (Rant, GlobalState)
+import Types exposing (Rant)
 import Url.Builder as Url
-import Views.Common exposing (btn)
+import Views.Common exposing (button)
 import Views.RantView exposing (rantView)
-
-
--- API
-
-
-getRants : Int -> Cmd Msg
-getRants pageIndex =
-    let
-        limit =
-            20
-
-        url =
-            Url.crossOrigin "https://www.devrant.io"
-                [ "api"
-                , "devrant"
-                , "rants"
-                ]
-                [ Url.int "app" 3
-                , Url.string "sort" "algo"
-                , Url.int "limit" 20
-                , Url.int "skip" (pageIndex * limit)
-                ]
-    in
-        Http.get url rantsResponseDecoder
-            |> send SetRants
-
 
 
 -- MODEL
@@ -95,8 +69,13 @@ view model currentTime =
         img [ src "/loading.svg" ] []
     else
         div []
-            [ ul [ css [ maxWidth (px 600), flex (int 1), overflowY auto, margin (px 0), padding (px 0) ] ]
-                (List.map (rantView currentTime) model.rants)
+            [ ul
+                [ css
+                    [ listStyle none
+                    , padding (px 0)
+                    ]
+                ]
+                (List.map (rantView currentTime []) model.rants)
             , loadMoreView model
             ]
 
@@ -123,23 +102,33 @@ loadMoreView model =
                 []
             ]
     else
-        btn
-            [ css
-                [ width (pct 100)
-                , height (px 80)
-                , fontSize (px 20)
-                , margin2 (px 8) (px 0)
-                , borderRadius (px 6)
-                , [ hover, focus, active ]
-                    |> List.map
-                        (\func ->
-                            func
-                                [ backgroundColor (rgba 255 255 255 0.2)
-                                , border (px 0)
-                                ]
-                        )
-                    |> Css.batch
-                ]
-            , onClick (LoadMore (model.pageIndex + 1))
+        Views.Common.button
+            [ onClick (LoadMore (model.pageIndex + 1))
             ]
             [ text "Load More" ]
+
+
+
+-- API
+
+
+getRants : Int -> Cmd Msg
+getRants pageIndex =
+    let
+        limit =
+            20
+
+        url =
+            Url.crossOrigin "https://www.devrant.io"
+                [ "api"
+                , "devrant"
+                , "rants"
+                ]
+                [ Url.int "app" 3
+                , Url.string "sort" "algo"
+                , Url.int "limit" 20
+                , Url.int "skip" (pageIndex * limit)
+                ]
+    in
+        Http.get url rantsResponseDecoder
+            |> send SetRants
