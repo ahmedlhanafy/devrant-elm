@@ -1,9 +1,10 @@
 module Views.RantView exposing (rantView)
 
 import Html
+import Url.Builder as Url
 import Css exposing (..)
 import Html.Styled exposing (..)
-import Html.Styled.Attributes exposing (css, class, src)
+import Html.Styled.Attributes exposing (css, class, src, href)
 import Html.Styled.Events exposing (onClick)
 import Types exposing (..)
 import Time exposing (Posix, millisToPosix)
@@ -31,95 +32,100 @@ rantView currentTime rant =
                 , padding (px 16)
                 ]
             ]
-            [ div
-                [ css
-                    [ displayFlex
-                    , flexDirection row
-                    , alignItems center
-                    , marginBottom (px 16)
-                    ]
+            [ a
+                [ css [ textDecoration none ]
+                , href (Url.absolute [ "rant", String.fromInt rant.id ] [])
                 ]
-                [ avatarView
-                    rant.user_avatar
+                [ div
+                    [ css
+                        [ displayFlex
+                        , flexDirection row
+                        , alignItems center
+                        , marginBottom (px 16)
+                        ]
+                    ]
+                    [ avatarView
+                        rant.user_avatar
+                    , div
+                        [ css
+                            [ flex (int 1)
+                            , cursor pointer
+                            ]
+                        ]
+                        [ span
+                            [ css
+                                [ fontSize (px 16)
+                                , fontWeight (int 600)
+                                , color theme.primaryText
+                                , marginLeft (px 16)
+                                , displayFlex
+                                , alignItems center
+                                ]
+                            ]
+                            [ text rant.user_username
+                            , span
+                                [ css
+                                    [ borderRadius (px 4)
+                                    , fontSize (px 12)
+                                    , marginLeft (px 12)
+                                    , padding (px 8)
+                                    , height (px 12)
+                                    , displayFlex
+                                    , justifyContent center
+                                    , alignItems center
+                                    , backgroundColor (rgba 255 255 255 0.2)
+                                    ]
+                                ]
+                                [ text <| fromInt <| rant.user_score ]
+                            ]
+                        ]
+                    , span
+                        [ css
+                            [ fontSize (px 11)
+                            , color theme.secondaryText
+                            ]
+                        ]
+                        [ createdTime
+                            |> Distance.inWords currentTime
+                            |> text
+                        ]
+                    ]
                 , div
                     [ css
-                        [ flex (int 1)
-                        , cursor pointer
+                        [ displayFlex
+                        , flexDirection row
+                        , justifyContent center
+                        , alignItems flexStart
+                        , marginBottom (px 16)
                         ]
                     ]
                     [ span
                         [ css
-                            [ fontSize (px 16)
-                            , fontWeight (int 600)
-                            , color theme.primaryText
-                            , marginLeft (px 16)
-                            , displayFlex
-                            , alignItems center
+                            [ color theme.primaryText
+                            , fontSize (px 14)
+                            , letterSpacing (px 0.2)
+                            , flex (int 1)
                             ]
                         ]
-                        [ text rant.user_username
-                        , span
-                            [ css
-                                [ borderRadius (px 4)
-                                , fontSize (px 12)
-                                , marginLeft (px 12)
-                                , padding (px 8)
-                                , height (px 12)
-                                , displayFlex
-                                , justifyContent center
-                                , alignItems center
-                                , backgroundColor (rgba 255 255 255 0.2)
-                                ]
-                            ]
-                            [ text <| fromInt <| rant.user_score ]
-                        ]
+                        [ text rant.text ]
                     ]
-                , span
+                , rantImageView
                     [ css
-                        [ fontSize (px 11)
-                        , color theme.secondaryText
+                        [ width (pct 100)
+                        , borderRadius (px 6)
+                        , marginTop (px 8)
+                        , marginBottom (px 16)
                         ]
                     ]
-                    [ createdTime
-                        |> Distance.inWords currentTime
-                        |> text
-                    ]
-                ]
-            , div
-                [ css
-                    [ displayFlex
-                    , flexDirection row
-                    , justifyContent center
-                    , alignItems flexStart
-                    , marginBottom (px 16)
-                    ]
-                ]
-                [ span
+                    rant.attached_image
+                , div
                     [ css
-                        [ color theme.primaryText
-                        , fontSize (px 14)
-                        , letterSpacing (px 0.2)
-                        , flex (int 1)
+                        [ displayFlex
+                        , flexWrap wrap
                         ]
                     ]
-                    [ text rant.text ]
+                    (List.map tagView rant.tags)
                 ]
-            , rantImageView
-                [ css
-                    [ width (pct 100)
-                    , borderRadius (px 6)
-                    , marginTop (px 8)
-                    , marginBottom (px 16)
-                    ]
-                ]
-                rant.attached_image
-            , div
-                [ css
-                    [ displayFlex
-                    , flexWrap wrap
-                    ]
-                ]
-                (List.map tagView rant.tags)
             ]
 
 

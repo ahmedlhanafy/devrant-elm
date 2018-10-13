@@ -1,17 +1,18 @@
 module HomePage.Main exposing (Model, view, init, Msg, update)
 
-import Html
 import Css exposing (..)
+import Decoder exposing (rantsResponseDecoder)
+import Html
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (css, class, src)
 import Html.Styled.Events exposing (onClick)
-import Types exposing (Rant, GlobalState)
-import HomePage.Decoder exposing (decodeRants)
-import Views.RantView exposing (rantView)
-import Views.Common exposing (btn)
-import Http exposing (Error)
-import String exposing (fromInt)
 import Http exposing (send, Error)
+import String exposing (fromInt)
+import Time exposing (Posix, millisToPosix)
+import Types exposing (Rant, GlobalState)
+import Url.Builder as Url
+import Views.Common exposing (btn)
+import Views.RantView exposing (rantView)
 
 
 -- API
@@ -24,9 +25,19 @@ getRants pageIndex =
             20
 
         url =
-            "https://www.devrant.io/api/devrant/rants?app=3&sort=algo&limit=" ++ (fromInt limit) ++ "&skip=" ++ (fromInt (pageIndex * limit))
+            Url.crossOrigin "https://www.devrant.io"
+                [ "api"
+                , "devrant"
+                , "rants"
+                ]
+                [ Url.int "app" 3
+                , Url.string "sort" "algo"
+                , Url.int "limit" 20
+                , Url.int "skip" (pageIndex * limit)
+                ]
     in
-        send SetRants (Http.get url decodeRants)
+        Http.get url rantsResponseDecoder
+            |> send SetRants
 
 
 
@@ -41,6 +52,7 @@ type alias Model =
     }
 
 
+init : ( Model, Cmd Msg )
 init =
     ( { rants = []
       , loading = True
@@ -77,14 +89,14 @@ update msg model =
 --VIEW
 
 
-view : Model -> GlobalState -> Html Msg
-view model globalState =
+view : Model -> Posix -> Html Msg
+view model currentTime =
     if model.loading then
         img [ src "/loading.svg" ] []
     else
         div []
             [ ul [ css [ maxWidth (px 600), flex (int 1), overflowY auto, margin (px 0), padding (px 0) ] ]
-                (List.map (rantView globalState.currentTime) model.rants)
+                (List.map (rantView currentTime) model.rants)
             , loadMoreView model
             ]
 

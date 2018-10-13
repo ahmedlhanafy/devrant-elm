@@ -1,47 +1,54 @@
-module HomePage.Decoder exposing (decodeRants)
+module Decoder exposing (rantsResponseDecoder, rantResponseDecoder)
 
 import Json.Decode as Decode exposing (int, string, float, Decoder, at, list, field, bool)
 import Json.Decode.Pipeline exposing (required, optional, hardcoded)
 import Types exposing (..)
 
 
-decodeRants : Decoder (List Rant)
-decodeRants =
-    at [ "rants" ] (list decodeRant)
+rantsResponseDecoder : Decoder (List Rant)
+rantsResponseDecoder =
+    at [ "rants" ] (list rantDecoder)
 
 
-decodeRant : Decoder Rant
-decodeRant =
+rantResponseDecoder : Decoder RantResponse
+rantResponseDecoder =
+    Decode.succeed RantResponse
+        |> required "rant" rantDecoder
+        |> optional "comments" (list commentDecoder) []
+
+
+rantDecoder : Decoder Rant
+rantDecoder =
     Decode.succeed Rant
         |> required "text" string
         |> required "id" int
-        |> required "attached_image" (Decode.maybe decodeImage)
+        |> required "attached_image" (Decode.maybe imageDecoder)
         |> required "user_username" string
         |> required "user_score" int
         |> required "num_comments" int
         |> required "tags" (list string)
-        |> required "user_avatar" (Decode.maybe decodeUserAvatar)
+        |> required "user_avatar" (Decode.maybe userAvatarDecoder)
         |> required "created_time" float
         |> required "user_id" int
         |> required "score" int
         |> optional "link" string ""
 
 
-decodeUserAvatar : Decoder UserAvatar
-decodeUserAvatar =
+userAvatarDecoder : Decoder UserAvatar
+userAvatarDecoder =
     Decode.succeed UserAvatar
         |> required "b" string
         |> required "i" string
 
 
-decodeImage : Decoder AttachedImage
-decodeImage =
+imageDecoder : Decoder AttachedImage
+imageDecoder =
     Decode.succeed AttachedImage
         |> required "url" string
 
 
-decodeComment : Decoder Comment
-decodeComment =
+commentDecoder : Decoder Comment
+commentDecoder =
     Decode.succeed Comment
         |> required "id" int
         |> required "rant_id" int
@@ -52,4 +59,4 @@ decodeComment =
         |> required "user_id" int
         |> required "user_username" string
         |> required "user_score" int
-        |> required "user_avatar" (Decode.maybe decodeUserAvatar)
+        |> required "user_avatar" (Decode.maybe userAvatarDecoder)
