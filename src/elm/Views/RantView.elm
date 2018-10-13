@@ -169,7 +169,7 @@ commentsView currentTime comments =
                         ]
                     ]
                     [ text ("Comments(" ++ String.fromInt (List.length comments) ++ ")") ]
-                , div [ css [ padding2 (px 0) (px 36) ] ] (List.map (commentView currentTime) comments)
+                , div [] (List.map (commentView currentTime) comments)
                 ]
 
 

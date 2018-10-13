@@ -1,7 +1,7 @@
 module Main exposing (..)
 
 import Browser
-import Browser.Navigation exposing (Key, pushUrl, load)
+import Browser.Navigation exposing (Key, pushUrl, load, back)
 import Css exposing (..)
 import Html
 import Html.Styled exposing (..)
@@ -15,11 +15,17 @@ import Http exposing (Error)
 import HomePage
 import RantPage
 import Views.Theme exposing (theme)
-import Views.Common exposing (button)
+import Views.Common exposing (button, topBar)
 import Router exposing (..)
 
 
 ---- MODEL ----
+
+
+type RouterModel
+    = Home HomePage.Model
+    | Rant RantPage.Model
+    | NotFound
 
 
 type alias Model =
@@ -68,6 +74,7 @@ type Msg
     | RantPageMsg RantPage.Msg
     | LinkClicked Browser.UrlRequest
     | UrlChanged Url
+    | GoBack
     | Tick Posix
     | SetTime Posix
 
@@ -96,6 +103,9 @@ update msg model =
             ( UrlChanged url, _ ) ->
                 changeRoute url model
 
+            ( GoBack, _ ) ->
+                ( model, back model.key 1 )
+
             ( HomePageMsg homeMsg, Home homeModel ) ->
                 updateWith Home HomePageMsg model (HomePage.update homeMsg homeModel)
 
@@ -117,6 +127,9 @@ view model =
         mapView msg viewFunc =
             Html.Styled.map msg viewFunc
 
+        title =
+            urlToTitle model.url
+
         body =
             [ div
                 [ css
@@ -125,13 +138,14 @@ view model =
                     , backgroundColor theme.bodyBackground
                     , height (vh 100)
                     , overflowY hidden
+                    , paddingTop (px 64)
                     ]
                 ]
-                [ div
+                [ topBar GoBack model.url
+                , div
                     [ css
                         [ flex (int 1)
                         , overflowY auto
-                        , padding2 (px 0) (px 400)
                         ]
                     ]
                     [ case model.routerModel of
@@ -149,7 +163,7 @@ view model =
                 ]
             ]
     in
-        { title = "Feed", body = body }
+        { title = title, body = body }
 
 
 

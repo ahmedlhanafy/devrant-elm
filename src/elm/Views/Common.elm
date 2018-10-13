@@ -7,6 +7,8 @@ import Html.Styled.Attributes exposing (css, class, src)
 import Html.Styled.Events exposing (onClick)
 import Types exposing (..)
 import Views.Theme exposing (theme)
+import Url exposing (Url)
+import Router exposing (..)
 
 
 tagView : String -> Styled.Html msg
@@ -76,6 +78,103 @@ btnStyles =
             )
         |> Css.batch
     ]
+
+
+topBar : msg -> Url -> Styled.Html msg
+topBar msg url =
+    let
+        ( showBackBtn, title ) =
+            case (toRoute url) of
+                HomeRoute ->
+                    ( False, "Feed" )
+
+                RantRoute _ ->
+                    ( True, "Rant" )
+
+                NotFoundRoute ->
+                    ( True, "NotFound" )
+    in
+        Styled.div
+            ([ css
+                [ backgroundColor theme.bodyBackground
+                , height (px 54)
+                , borderBottom3 (px 1) solid theme.border
+                , displayFlex
+                , alignItems center
+                , justifyContent center
+                , padding (px 6)
+                , position fixed
+                , top (px 0)
+                , left (px 0)
+                , right (px 0)
+                , property "-webkit-app-region" "drag"
+                ]
+             ]
+            )
+            [ if showBackBtn then
+                Styled.img
+                    [ src "/back_icon.png"
+                    , css
+                        [ height (px 24)
+                        , width (px 24)
+                        , position absolute
+                        , left (px 16)
+                        , cursor pointer
+                        ]
+                    , onClick msg
+                    ]
+                    []
+              else
+                Styled.span [] []
+            , Styled.span
+                [ css
+                    [ color theme.primaryText
+                    , fontSize (px 20)
+                    , fontWeight bold
+                    ]
+                ]
+                [ Styled.text title ]
+            ]
+
+
+
+--     background-color: $content-background;
+--     transition: background-color 200ms ease-in-out;
+--
+--     height: 64px;
+--     min-height: 64px;
+--     border-bottom: 1px $border solid;
+--     display: flex;
+--     flex-direction: row;
+--     justify-content: flex-end;
+--     align-items: center;
+--     padding: 6px;
+--     position: fixed;
+--     top: 0;
+--     left: $sidebar-width;
+--     right: 0;
+--     .avatar {
+--         width: 28px;
+--         height: 28px;
+--         border-radius: 6px;
+--         margin-right: 16px;
+--     }
+--     .icon {
+--         color: $primary-text;
+--         font-size: 30px;
+--         margin: 0px 16px;
+--     }
+--     .title-wrapper {
+--         display: flex;
+--         flex: 1;
+--         align-items: center;
+--         justify-content: center;
+--         .title {
+--             color: $primary-text;
+--             font-size: 18px;
+--         }
+--     }
+-- }
 
 
 button : List (Styled.Attribute msg) -> List (Styled.Html msg) -> Styled.Html msg
